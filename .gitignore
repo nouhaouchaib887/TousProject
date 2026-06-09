@@ -1,0 +1,35 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+
+# Environnement (TRÈS IMPORTANT)
+# On ne versionne jamais le fichier contenant les mots de passe réels
+.env
+
+# Base de données
+*.db
+*.sqlite3
+
+# IDE (VS Code, PyCharm)
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/

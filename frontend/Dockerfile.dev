@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# On installe les dépendances
+COPY package*.json ./
+RUN npm install
+
+# On ne copie PAS tout le code ici car on va utiliser un VOLUME 
+# Mais on peut le faire par sécurité pour les fichiers de config
+COPY . .
+
+# On expose le port de développement (Vite utilise 5173 par défaut)
+EXPOSE 5173
+
+# Commande pour lancer le serveur de dev avec Hot Reload
+# Le flag --host est crucial pour que Docker puisse exposer le port
+CMD ["npm", "run", "dev", "--", "--host"]

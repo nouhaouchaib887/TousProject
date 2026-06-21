@@ -12,7 +12,6 @@ from pydantic import computed_field
 # On utilise TYPE_CHECKING pour éviter les imports circulaires avec Project
 if TYPE_CHECKING:
     from .role import Role
-    from app.models.core.HR.staff import Staff
 # 1. Définir l'énumération en anglais
 class UserStatus(str, Enum):
     ACTIVE = "active"
@@ -39,7 +38,6 @@ class User(SQLModel, table=True):
     role_id: int = Field(foreign_key="role.id")
     role: "Role" = Relationship(back_populates="users")
     password_reset_tokens: List["PasswordResetToken"] = Relationship(back_populates="user")
-    staff_profile: Optional["Staff"] = Relationship(back_populates="user")
 
     @computed_field
     @property

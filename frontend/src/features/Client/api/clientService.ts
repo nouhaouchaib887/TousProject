@@ -1,12 +1,12 @@
 
-export const addClient = async (clientData: any, attachmentId:  string) => {
+export const addClient = async (clientData: any) => {
  const API_URL = `http://localhost:8000/api/v1/add_client`; // À adapter selon ton env
 
   try {
   const payload = {
-    ...clientData,
-    attachment_id: attachmentId,
+    ...clientData
   };
+  console.log("payload créé", payload)
 
   const response = await fetch(`http://localhost:8000/api/v1/add_client`, {
     method: "POST",
@@ -36,7 +36,7 @@ export const addClient = async (clientData: any, attachmentId:  string) => {
   }
 };
 
-export async function uploadCin(file: File) {
+export async function uploadCin(file: File,client_id: string) {
   const token = localStorage.getItem("session_token");
 
   if (!token) {
@@ -45,6 +45,7 @@ export async function uploadCin(file: File) {
 
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("client_id", client_id);
 
   const response = await fetch(`http://localhost:8000/api/v1/upload_cin`, {
     method: "POST",
@@ -61,12 +62,11 @@ export async function uploadCin(file: File) {
    return data;
   
 }
-export const updateClient = async (clientId: string, clientData: any, attachmentId?: string) => {
-  console.log('Updating client:', clientId, clientData, 'with attachment:', attachmentId);
+export const updateClient = async (clientId: string, clientData: any) => {
+  console.log('Updating client:', clientId, clientData);
   return {
     id: clientId,
-    ...clientData,
-    attachmentId: attachmentId || 'existing_attachment_id'
+    ...clientData
   };
 };
 

@@ -1,87 +1,51 @@
-
 services:
-  # 1. LA BASE DE DONNÉES
   db:
     image: postgres:15
-    container_name: tous_postgres_db
+    container_name: stock_postgres_db
     ports:
-      - "5435:5434"
+      - "5435:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - stock_postgres_data:/var/lib/postgresql/data
     environment:
-      # On lie les variables attendues par Postgres aux valeurs du .env
-      - POSTGRES_USER=toususer
-      - POSTGRES_PASSWORD=toususer123
-      - POSTGRES_DB=project_tous_db
+      - POSTGRES_USER=stock_user
+      - POSTGRES_PASSWORD=stock_password
+      - POSTGRES_DB=stock_db
     healthcheck:
-      # On précise l'utilisateur ET la base de données
-      test: ["CMD-SHELL", "pg_isready -U geouser -d project_db"]
+      test: ["CMD-SHELL", "pg_isready -U stock_user -d stock_db"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-
-  # 2. AZURITE (Simulateur de stockage Cloud Azure)
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    container_name: top_azurite
-    ports:
-      - "10003:10003" # Blob Storage (Fichiers/Documents)
-      - "10004:10004" # Queue Storage
-      - "10005:10005" # Table Storage
-    volumes:
-      - azurite_data:/data
-    # On force Azurite à écouter sur toutes les interfaces pour que le backend puisse s'y connecter
-    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data"
-
-  # 3. LE BACKEND (FastAPI)
   backend:
     build: ./backend
-    container_name: tous_backend
-    # Au lieu de lister les variables une par une, on fait ceci :
+    container_name: stock_backend
     env_file:
       - backend/.env
-    
-
-    environment:
-      # On force la variable ici pour pointer vers le conteneur Docker "azurite" 
-      # (remplace ce que tu aurais pu mettre dans backend/.env)
-      - AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
     ports:
-      - "8001:8001"
+      - "8001:8000"
     volumes:
-      - ./backend:/app  # <- Lie ton code local au dossier /app du conteneur
-
-    # ─── ON FORCE UVICORN EN MODE RELOAD ───
-    # Adapte 'app.main:app' si ton instance FastAPI est dans un autre fichier (ex: app.api:app)
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-
-    
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       db:
         condition: service_healthy
-      azurite:
-        condition: service_started
     restart: on-failure
-    
 
-  # 3. LE FRONTEND (Nginx)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: tous_web_frontend
+    container_name: stock_frontend
     environment:
-    - WATCHPACK_POLLING=true
-    - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
     volumes:
-      - ./frontend:/app        
+      - ./frontend:/app
       - /app/node_modules
     ports:
-      - "8081:3001"
+      - "8081:3000"
     depends_on:
       - backend
 
 volumes:
-  postgres_data:
-  azurite_data:
+  stock_postgres_data:

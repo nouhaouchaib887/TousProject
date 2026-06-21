@@ -124,27 +124,37 @@ const handleQualityBlur = () => {
       rc: clientType === "Morale" ? sanitizeValue(formData.rc) : null,
       quality: formData.quality
     };
+    console.log("client payload:", clientPayload)
 
-    // 3️⃣ Étape 1 : Upload du CIN
-    let attachmentId = client?.attachmentId;
-        if (cinFile) {
-          const attachment = await uploadCin(cinFile); 
-          attachmentId = attachment.id;
-        }
-         let result;
+    let result;
         if (isEdit) {
-          result = await updateClient(client.id, clientPayload, attachmentId);
+          result = await updateClient(client.id, clientPayload);
+          if (cinFile) {
+          const attachment = await uploadCin(cinFile,client.id);
+        }
+          
           toast.success("Client mis à jour !", {
-            description: `${formData.first_name} ${formData.last_name} a été modifié avec succès.`,
-          });
+            description: `${formData.first_name} ${formData.last_name} a été modifié avec succès.`,}
+          );
+          
+        
         } else {
     // 4️⃣ Étape 2 : Création du client avec attachment_id
-       result = await addClient(clientPayload, attachmentId);
+       result = await addClient(clientPayload);
+       console.log("client", result)
+       
+        if (result?.id && cinFile) {
+          console.log(result?.id);
+          const client_id = result?.id
+          const attachment = await uploadCin(cinFile,client_id);
+        }
+       
+          
 
-    // 5️⃣ Succès
-    toast.success("Client créé !", {
-      description: `${formData.first_name} ${formData.last_name} a été ajouté avec succès.`,
-    });
+        // 5️⃣ Succès
+          toast.success("Client créé !", {
+          description: `${formData.first_name} ${formData.last_name} a été ajouté avec succès.`,
+       });
   }
 
     onClientCreate?.(result);
@@ -208,7 +218,30 @@ const handleQualityBlur = () => {
             />
           </div>
 
-
+          <div className="col-span-1 space-y-1.5">
+            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Qualité</Label>
+            <Input
+  list="qualite-suggestions"
+  value={formData.quality?.name || ""}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      quality: {
+        id: "",
+        name: e.target.value,
+      },
+    })
+  }
+  onBlur={handleQualityBlur}
+  placeholder="Ex: Propriétaire, Héritier..."
+  className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20"
+/>
+           <datalist id="qualite-suggestions">
+  {suggestedQualites.map((item: any) => (
+    <option key={item.id} value={item.name} />
+  ))}
+</datalist>
+          </div>
 
           <div className="col-span-1 sm:col-span-2 space-y-2">
             <div className="flex items-center justify-between mb-1">
@@ -320,30 +353,7 @@ const handleQualityBlur = () => {
               </SelectContent>
             </Select>
           </div>
-          <div className="col-span-1 space-y-1.5">
-            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Qualité</Label>
-            <Input
-  list="qualite-suggestions"
-  value={formData.quality?.name || ""}
-  onChange={(e) =>
-    setFormData({
-      ...formData,
-      quality: {
-        id: "",
-        name: e.target.value,
-      },
-    })
-  }
-  onBlur={handleQualityBlur}
-  placeholder="Ex: Propriétaire, Héritier..."
-  className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20"
-/>
-           <datalist id="qualite-suggestions">
-  {suggestedQualites.map((item: any) => (
-    <option key={item.id} value={item.name} />
-  ))}
-</datalist>
-          </div>
+          
           {clientType === 'Morale' && (
             <>
               <div className="col-span-1 sm:col-span-2 space-y-1.5 animate-in fade-in slide-in-from-top-2">

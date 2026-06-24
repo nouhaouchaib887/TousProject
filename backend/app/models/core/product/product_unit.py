@@ -15,36 +15,38 @@ if TYPE_CHECKING:
 
 
 
+from enum import Enum
+from typing import Optional
+from uuid import UUID, uuid4
+from decimal import Decimal
+
+from sqlmodel import SQLModel, Field, Relationship
+
+
 class UnitType(str, Enum):
-    UNIT = "U"          # unité / pièce
+    UNIT = "U"      # unité / pièce
     KG = "KG"
     LITER = "L"
     METER = "M"
     BOX = "BOX"
+    BAG = "BAG"    # sac
+    TON = "TON"    # tonne
 
 
-class ProductCategoryBase(SQLModel):
-
-    reference: str = Field(
-        index=True,
-        unique=True,
-        max_length=100,
-        description="Référence interne du catégorie de produit"
-    )
-
-    lable: Optional[str] = None
-
-    description: Optional[str] = None
+class ProductUnitBase(SQLModel):
+    label: UnitType = Field(nullable=False)
+    conversion_to_base: Decimal = Field(default=Decimal("1"))
+    is_default: bool = Field(default=False)
 
 
 
-class ProductCategory(ProductCategoryBase, table=True):
-    __tablename__ = "product_category"
+class ProductUnit(ProductUnitBase, table=True):
+    __tablename__ = "product_unit"
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-
+    product_id: UUID = Field(foreign_key="product.id", nullable=False) 
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     updated_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id", index=True)  # Dernier utilisateur à avoir modifié le produit 
     #Relations
-    products: List["Product"] = Relationship(back_populates="product_category")
+    product: Optional[Product] = Relationship(back_populates="units")

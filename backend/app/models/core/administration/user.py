@@ -21,7 +21,7 @@ class UserStatus(str, Enum):
 
 class User(SQLModel, table=True):
 
-    __tablename__ = "users"
+    __tablename__ = "user"
     id: Optional[uuid.UUID] = Field(
         default_factory=uuid.uuid4,
         primary_key=True,

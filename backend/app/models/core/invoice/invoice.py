@@ -3,12 +3,13 @@ from decimal import Decimal
 from enum import Enum
 from uuid import UUID, uuid4
 from typing import Optional, List, TYPE_CHECKING
+from ..payment.payment import PaymentMethod
 
 from sqlmodel import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
+    
     from .invoice_item import InvoiceItem
-    from ..payment.payment import PaymentMethod
     from ..payment.payment import Payment
 class InvoiceType(str, Enum):
     SALE = "VENTE"          # facture client
@@ -24,7 +25,7 @@ class InvoiceStatus(str, Enum):
 
 
 class Invoice(SQLModel, table=True):
-    __tablename__ = "invoices"
+    __tablename__ = "invoice"
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
@@ -43,6 +44,7 @@ class Invoice(SQLModel, table=True):
     total_vat: Decimal = Field(default=0)
     total_ttc: Decimal = Field(default=0)
     expected_payment_method: PaymentMethod | None = None
+    payment_reference: Optional[str] = None
 
     notes: str | None = None
 
@@ -52,6 +54,6 @@ class Invoice(SQLModel, table=True):
     invoice_items: List["InvoiceItem"] = Relationship(
         back_populates="invoice"
     )
-    transactions = List["Payment"] = Relationship(
+    transactions : List["Payment"] = Relationship(
         back_populates="invoice"
     )

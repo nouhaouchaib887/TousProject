@@ -1,5 +1,4 @@
 # backend/app/models/client.py
-from __future__ import annotations
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime

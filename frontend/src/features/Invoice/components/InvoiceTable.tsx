@@ -11,7 +11,7 @@ export interface InvoiceTableProps {
   invoices: InvoiceTableRead[];
   currency?: string;
   onEdit: (invocie:InvoiceTableRead) => void;
-  onPay?: (invoice: InvoiceTableRead) => void;
+  onValidate?: (invoice: InvoiceTableRead) => void;
   onDelete: (invoice: InvoiceTableRead) => void;
   onDuplicate?: (invoice: InvoiceTableRead) => void;
   onView?: (invoice: InvoiceTableRead) => void;
@@ -25,7 +25,7 @@ type PaymentStatus = "Impayé" | "Partiel" | "Payé";
 
 
 
-export function InvoiceTable({ invoices, onEdit,onDelete, onDuplicate, onEditClient,onPay  }: InvoiceTableProps) {
+export function InvoiceTable({ invoices, onEdit,onDelete, onDuplicate, onEditClient,onValidate  }: InvoiceTableProps) {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceTableRead | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
@@ -52,13 +52,13 @@ export function InvoiceTable({ invoices, onEdit,onDelete, onDuplicate, onEditCli
                   </span>
                 </div>
               </th>
-              <th colSpan={4} className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100 whitespace-nowrap">
+              <th colSpan={3} className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <User size={14} />
                   Informations du Client
                 </div>
               </th>
-              <th colSpan={5} className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100 whitespace-nowrap">
+              <th colSpan={3} className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] border-r border-slate-100 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <CreditCard size={14} />
                   Montant
@@ -143,6 +143,13 @@ export function InvoiceTable({ invoices, onEdit,onDelete, onDuplicate, onEditCli
                     >
                       <Copy size={18} />
                     </button>
+                     <button 
+                          onClick={() => onValidate?.(invoice)}
+                          className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all cursor-pointer"
+                          title="Valider"
+                        >
+                          <Check size={15} className="stroke-[2.5]" />
+                        </button>
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();

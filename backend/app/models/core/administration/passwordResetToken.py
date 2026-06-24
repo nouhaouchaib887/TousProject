@@ -27,7 +27,7 @@ class PasswordResetToken(SQLModel, table=True):
     ip_address: Optional[str] = None # IP qui a fait la demande
     
     # Relation avec l'utilisateur
-    user_id: uuid.UUID = Field(foreign_key="users.id")
+    user_id: uuid.UUID = Field(foreign_key="user.id")
 
     user: "User" = Relationship(back_populates="password_reset_tokens")
 

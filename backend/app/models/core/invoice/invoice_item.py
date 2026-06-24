@@ -15,8 +15,8 @@ class InvoiceItem(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
-    invoice_id: UUID = Field(foreign_key="invoices.id", index=True)
-    product_id: UUID = Field(foreign_key="products.id", index=True)
+    invoice_id: UUID = Field(foreign_key="invoice.id", index=True)
+    product_id: UUID = Field(foreign_key="product.id", index=True)
 
     quantity: Decimal = Field(gt=0)
 

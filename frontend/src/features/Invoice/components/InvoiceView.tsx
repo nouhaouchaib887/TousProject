@@ -5,14 +5,13 @@ import{InvoiceTableRead} from '../types'
 import { Card } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Modal } from '../../../components/ui/modal';
-import { AddInvoiceForm } from './AddInvoiceForm';
+import  AddInvoiceForm  from './AddInvoiceForm';
 import {InvoiceTable} from './InvoiceTable'
+import {getInvoices} from '../api/invoiceService'
 import { Plus, MapPin,  X, Calendar as CalendarIcon,Filter, RotateCcw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import ProjectTable from '@/features/projects/components/projectTable/projectTable';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import { getProjects } from '@/features/projects/api/ProjectService';
 
 export  function InvoiceView() {
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
@@ -24,7 +23,7 @@ export  function InvoiceView() {
 const [filteredInvoices, setFilteredInvoices] = useState<InvoiceTableRead[]>([])
 useEffect(() => {
   async function fetchInvoices() {
-    const data = await getProjects()
+    const data = await getInvoices()
     setInvoices(data)
     setFilteredInvoices(data)
   }
@@ -197,6 +196,16 @@ const handleDuplicateProject = (invoice: any) => {
          onEdit={handleEditInvoice} onDelete={handleDeleteProject}
           onDuplicate={handleDuplicateProject}
           onEditClient={handleEditClient}/>
+
+        {/* Add Invoice Modal */}
+        <AddInvoiceForm
+          isOpen={isAddModalOpen} 
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setInvoiceToEdit(null);
+          }} 
+          invoice={invoiceToEdit}
+        />
       </div>
   );
 }

@@ -19,12 +19,9 @@ class StockMovementReason(str, Enum):
     RETURN_SUPPLIER = "RETURN_SUPPLIER"
     INVENTORY_ADJUSTMENT = "INVENTORY_ADJUSTMENT"
     INITIAL_STOCK = "INITIAL_STOCK"
-    DAMAGED = "DAMAGED"
-    LOST = "LOST"
-
-
+    
 class StockMovement(SQLModel, table=True):
-    __tablename__ = "stock_movements"
+    __tablename__ = "stock_movement"
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 

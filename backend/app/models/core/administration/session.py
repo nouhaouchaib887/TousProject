@@ -19,7 +19,7 @@ class UserSession(SQLModel, table=True):
     closed_at: datetime = Field(default=None, nullable=True)
     last_active_at: datetime = Field(default = datetime.utcnow())
     is_active: bool = Field(default = True)
-    user_id: uuid.UUID = Field(foreign_key="users.id")
+    user_id: uuid.UUID = Field(foreign_key="user.id")
 
 
 

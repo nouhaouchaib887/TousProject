@@ -85,7 +85,8 @@ const mapInvoiceToForm = (invoice: InvoiceTableRead): InvoiceCreate=> ({
     due_date: invoice.due_date ?? '',
     payment_method: invoice.payment_method,
     expected_check_number: invoice.payment_reference ,
-    expected_check_date: invoice.expected_check_date
+    expected_check_date: invoice.expected_check_date,
+    invoice_type: invoice.invoice_type
   },
 
   invoice_items: {
@@ -121,7 +122,7 @@ const mapInvoiceToForm = (invoice: InvoiceTableRead): InvoiceCreate=> ({
   useState<any| null>(null)
 
   const handleContinue = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
     } else {
        onSuccess?.({
@@ -334,7 +335,7 @@ const generateReceiptData = (
       onClose={onClose} 
       title={invoice ? "Modifier la Facture" : "Nouvelle Facture"}
       description={invoice ? `Modification du dossier ${invoice.reference}` : "Suivez les étapes pour créer une facture complète."}
-      maxWidth="2xl"
+      maxSizeClass="max-w-2xl"
     >
       <div className="p-6 space-y-8">
         {/* Step Indicator */}

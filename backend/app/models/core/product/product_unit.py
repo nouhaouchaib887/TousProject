@@ -49,4 +49,4 @@ class ProductUnit(ProductUnitBase, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     updated_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id", index=True)  # Dernier utilisateur à avoir modifié le produit 
     #Relations
-    product: Optional[Product] = Relationship(back_populates="units")
+    product: Optional["Product"] = Relationship(back_populates="units")

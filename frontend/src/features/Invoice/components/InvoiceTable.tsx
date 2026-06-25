@@ -5,7 +5,7 @@ import{InvoiceTableRead} from '../types'
 import { FileText, Eye, Copy, Check, Trash2 } from 'lucide-react';
 import StatusBadge from '../../../components/StatusBadge';
 import { MapPin, Phone, User, CreditCard, Users as UsersIcon, Info, ExternalLink } from 'lucide-react';
-
+import InvoiceDetailPanel from './InvoiceDetailPanel';
 
 export interface InvoiceTableProps {
   invoices: InvoiceTableRead[];
@@ -15,7 +15,7 @@ export interface InvoiceTableProps {
   onDelete: (invoice: InvoiceTableRead) => void;
   onDuplicate?: (invoice: InvoiceTableRead) => void;
   onView?: (invoice: InvoiceTableRead) => void;
-  onEditClient: (invoice: InvoiceTableRead) => void;
+  onEditPartner: (invoice: InvoiceTableRead) => void;
 }
 
 
@@ -25,7 +25,7 @@ type PaymentStatus = "Impayé" | "Partiel" | "Payé";
 
 
 
-export function InvoiceTable({ invoices, onEdit,onDelete, onDuplicate, onEditClient,onValidate  }: InvoiceTableProps) {
+export function InvoiceTable({ invoices, onEdit,onDelete, onDuplicate, onEditPartner,onValidate  }: InvoiceTableProps) {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceTableRead | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
@@ -168,7 +168,28 @@ export function InvoiceTable({ invoices, onEdit,onDelete, onDuplicate, onEditCli
         </table>
       </div>
     </div>
-
+    <InvoiceDetailPanel 
+        invoice={selectedInvoice}
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        onEdit={(invoice) => {
+          setIsPanelOpen(false);
+          onEdit?.(invoice);
+        }}
+        onDelete={(invoice) => {
+          setIsPanelOpen(false);
+          onDelete?.(invoice);
+        }}
+         onDuplicate={(invoice) => {
+          setIsPanelOpen(false);
+          onDuplicate?.(invoice);
+        }}
+        onEditPartner={(partner) => {
+          setIsPanelOpen(false);
+          onEditPartner?.(partner);
+        }}
+        
+      />
       
     </>
   );

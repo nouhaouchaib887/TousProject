@@ -4,14 +4,15 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, X ,Trash2, CheckCircle, AlertTriangle} from 'lucide-react'
+import { Plus, X ,Trash2, CheckCircle, AlertTriangle, ChevronDown, Sparkles, Check} from 'lucide-react'
 import { TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {InvoiceCreate, InvoiceMetaData,InvoiceItem, Product,Transaction,InvoiceTableRead, InvoiceItemsDataSection} from '../../types'
-import {getItems} from '../../api/invoiceService'
+import {getItems, getProductCategories, generateInvoiceItems} from '../../api/invoiceService'
 import { SearchableSelect } from '@/components/ui/searchableSelect'
 import { se } from 'date-fns/locale'
 import { MenuItem } from '@base-ui/react'
+import { toast } from "sonner"
 
 interface InvoiceItemsSectionProps {
   value: InvoiceItemsDataSection
@@ -41,6 +42,11 @@ const initialNewItem = {
 }
   const [isEditing, setIsEditing] = useState(false) 
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
+  const [isGenrating, setIsGenerating] = useState(false)
+  const [isGenerated, setIsGenerated] = useState(false)
+   const [selectedGenCategories, setSelectedGenCategories] = useState<string[]>([]);
+  const [isCatDropdownOpen, setIsCatDropdownOpen] = useState<boolean>(false);
+  
 const articlesSum = {
   ht: (value.invoice_items ?? []).reduce(
     (sum, item) => sum + ((item.quantity ?? 1)* (item.amount_ht ?? 0)),
@@ -106,6 +112,59 @@ const [availableItems, setAvailableItems] = useState<any[]>([])
     fetchAvailableItems()
   }, [])
 
+  const [availableCategories, setAvailableCategories] = useState<any[]>([])
+
+  useEffect(() => {
+    async function fetchAvailableCategories() {
+      const data = await getProductCategories()
+      setAvailableCategories(data)
+    }
+
+    fetchAvailableCategories()
+  }, [])
+    const selectedCategories = availableCategories.filter((cat) =>
+    selectedGenCategories.includes(cat.id)
+  )
+
+  const handleGenerateItems = async () => {
+  try {
+    setIsGenerating(true)
+
+    const target_amount = value.amount_ttc
+    
+      // GENERATGE
+    if (target_amount) {
+      try {
+        const invoice_items = await generateInvoiceItems(target_amount)
+
+        onChange({
+          ...value,
+          invoice_items: invoice_items
+        }
+          
+        )
+
+        setIsGenerated(true)
+        toast.success("Facture créé avec succès")
+        return
+      } catch (error) {
+        console.error(error)
+        toast.error("Erreur lors de la génération des articles")
+        return
+      }
+      finally {
+    setIsGenerating(false)
+  }
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error("Erreur lors de la génération des articles")
+  }
+
+}
+
+  
+ 
 
  const InvoiceTypeLabels: Record<any, string> = {
   V: 'Vente',
@@ -229,7 +288,110 @@ const [availableItems, setAvailableItems] = useState<any[]>([])
               {/* BLOCK 2: PRODUCTS ITEMS FORM AND TABLE */}
               <div className="border border-[#e2e8f0] rounded-3xl p-6 space-y-4 animate-fade-in bg-white">
                 <p className="text-[11px] font-black text-[#1d2745] uppercase tracking-wider border-b border-slate-100 pb-2">Détails des Articles</p>
-                
+                 {/* AUTO-GENERATION BLOCK */}
+                <div className="bg-slate-50 border border-slate-200/80 p-5 rounded-3xl space-y-4">
+                  <div>
+                    <p className="text-xs font-bold text-[#1d2745] flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-amber-500 animate-pulse" />
+                      Génération automatique 
+                    </p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Sélectionnez les catégories ci-dessous pour composer instantanément des articles équivalant exactement à la cible TTC de {value.amount_ttc?.toLocaleString()} DH.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                    <div className="sm:col-span-2 relative">
+                      <label className="block text-[10px] font-extrabold text-[#8fa0b5] uppercase tracking-wider mb-2">Choisir les catégories *</label>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setIsCatDropdownOpen(!isCatDropdownOpen)}
+                        className="w-full h-10 px-5 border border-slate-200 bg-white text-slate-700 rounded-full text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#1d2745]/10 focus:border-[#1d2745] transition-all flex items-center justify-between cursor-pointer"
+                      >
+                         <span>
+                          {selectedCategories.length === 0
+                          ? "Toutes les catégories"
+                          : selectedCategories.length === 1
+                          ? selectedCategories[0].reference
+                          : `${selectedCategories.length} catégories sélectionnées (${selectedCategories
+                          .map((cat) => cat.reference)
+                          .join(", ")})`}
+                          </span>
+                        <ChevronDown size={14} className="text-slate-400 shrink-0 ml-1" />
+                      </button>
+
+                      {isCatDropdownOpen && (
+                        <>
+                          {/* Invisible backdrop to close the dropdown */}
+                          <div 
+                            className="fixed inset-0 z-40" 
+                            onClick={() => setIsCatDropdownOpen(false)}
+                          />
+                          
+                          {/* Dropdown list */}
+                          <div className="absolute left-0 right-0 mt-1.5 bg-white border border-[#e2e8f0] rounded-2xl shadow-xl p-1.5 text-slate-700 focus:outline-none max-h-60 overflow-y-auto z-50 animate-in fade-in-0 slide-in-from-top-1 duration-150">
+                          <button
+                          type="button"
+                          onClick={() => {
+                          setSelectedGenCategories([])
+                          }}
+                          className="w-full flex items-center justify-between cursor-pointer hover:bg-slate-50 py-2.5 px-3.5 rounded-xl transition-all font-semibold text-xs text-left"
+                          >
+                          <span>Toutes les catégories</span>
+                          {selectedGenCategories.length === 0 && (
+                          <Check size={14} className="text-[#1d2745] shrink-0" />
+                            )}
+                          </button>
+
+                          <div className="h-px bg-slate-100 my-1"></div>
+
+                          {availableCategories.map((cat) => {
+                          const isSelected = selectedGenCategories.includes(cat.id)
+
+                          return (
+                            <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                            setSelectedGenCategories((prev) =>
+                            isSelected
+                            ? prev.filter((id) => id !== cat.id)
+                            : [...prev, cat.id]
+                            )
+                          }}
+                          className="w-full flex items-center justify-between cursor-pointer hover:bg-slate-50 py-2.5 px-3.5 rounded-xl transition-all font-semibold text-xs text-left"
+                            >
+                          <span className="truncate">{cat.label}</span>
+
+                          {isSelected && (
+                          <Check size={14} className="text-[#1d2745] shrink-0" />
+                          )}
+                          </button>
+                          )
+                          })}
+                        </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleGenerateItems}
+                        className="w-full sm:w-auto px-6 h-10 bg-[#1d2745] hover:bg-opacity-90 text-white rounded-full text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-3xs transition-all"
+                      >
+                        <Sparkles size={14} className="text-amber-300" />
+                        <span>Générer la liste</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center py-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-white px-3 relative z-10">Ou ajouter manuellement</span>
+                  <div className="h-px bg-slate-100 -mt-2"></div>
+                </div>
                 {/* Form to add item */}
                 <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-6 border-b border-slate-100 items-end">
                   {/* Produit available */}

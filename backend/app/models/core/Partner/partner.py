@@ -19,7 +19,7 @@ class LegalType(str, Enum):
 
 class PartnerBase(SQLModel):
     code: str = Field(unique = True,index=True)
-    client_type: LegalType = Field(default=LegalType.PHYSICAL)
+    legal_type: LegalType = Field(default=LegalType.PHYSICAL)
     # Informations Personne Physique (ou Gérant de l'entreprise)
     first_name: str = Field(index=True)
     last_name: str = Field(index=True)

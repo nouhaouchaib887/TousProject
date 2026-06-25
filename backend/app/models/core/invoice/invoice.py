@@ -4,6 +4,7 @@ from enum import Enum
 from uuid import UUID, uuid4
 from typing import Optional, List, TYPE_CHECKING
 from ..payment.payment import PaymentMethod
+from pydantic import computed_field
 
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -57,3 +58,10 @@ class Invoice(SQLModel, table=True):
     transactions : List["Payment"] = Relationship(
         back_populates="invoice"
     )
+
+
+    @computed_field
+    @property
+    def total_paid(self) -> float:
+        """Calcule le montant payé."""
+        return sum(t.amount for t in self.transactions )

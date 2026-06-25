@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label'
 import { Plus, X } from 'lucide-react'
 import { TabsContent } from '@/components/ui/tabs'
 import { Dialog,DialogTrigger, DialogContent, DialogHeader,DialogTitle } from '@/components/ui/dialog'
+import { Modal } from '@/components/ui/modal'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {InvoiceCreate, InvoiceMetaData,InvoiceItem, Transaction,InvoiceTableRead} from '../../types'
 import { PartnerForm } from '@/features/partner/components/partnerForm'
-
+import AddPartnerModal from  '@/features/partner/components/partnerModal'
 import { SearchableSelect } from '@/components/ui/searchableSelect'
 import { se } from 'date-fns/locale'
 
@@ -24,6 +25,7 @@ interface InvoiceMetaDataSectionProps {
 export default function InvoiceMetaDataSection({ value, onChange, reference }: InvoiceMetaDataSectionProps) {
  
   const [partners, setPartners] = useState<any[]>([])
+const [isAddingTier, setIsAddingTier] = useState(false);
 
   const handlePartnerSuccess = (partner: any) => {
     
@@ -37,8 +39,12 @@ export default function InvoiceMetaDataSection({ value, onChange, reference }: I
 
 
  const InvoiceTypeLabels: Record<any, string> = {
-  V: 'Vente',
-  A: 'Achat',
+  VENTE: 'Facture Client',
+  ACHAT: 'Facture Fournisseur',
+}
+const PaymentMethodsLabels: Record<any, string> = {
+  CHEQUE: 'Chèque',
+  VIREMENT: 'Virement',
 }
   return (
 
@@ -73,7 +79,9 @@ export default function InvoiceMetaDataSection({ value, onChange, reference }: I
     }}
   >
     <SelectTrigger className="w-full h-10 bg-slate-50/50 border-slate-200">
-      <SelectValue placeholder="Sélectionner..." />
+      <SelectValue placeholder="Sélectionner..." >
+        {InvoiceTypeLabels[value.invoice_type]}
+      </SelectValue>
     </SelectTrigger>
 
     <SelectContent>
@@ -131,24 +139,26 @@ export default function InvoiceMetaDataSection({ value, onChange, reference }: I
                           })
                           }}
                       />
-                    <div className="flex justify-end mt-1">
-                       <Dialog>
-                        <DialogTrigger >
-                            
-                          <Button variant="outline" className="font-bold text-[10px] tracking-wider uppercase text-[#1d2745] flex items-center gap-1 hover:opacity-80 transition-all cursor-pointer">
-                            <Plus className="h-3 w-3" /> Nouveau
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-3xl border-none shadow-2xl bg-card">
-                          <DialogHeader className="p-8 pb-4 shrink-0 bg-muted/30 border-b border-border">
-                            <DialogTitle className="text-xl font-semibold text-brand-500 uppercase tracking-tight">Nouveau Client</DialogTitle>
-                          </DialogHeader>
-                          <div className="p-8 pt-6 overflow-hidden flex flex-col min-h-0 bg-card">
-                            <PartnerForm onPartnerCreate={handlePartnerSuccess} />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      
+                        <div className="flex justify-end mt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingTier(true)}
+                        className="font-bold text-[10px] tracking-wider uppercase text-[#1d2745] flex items-center gap-1 hover:opacity-80 transition-all cursor-pointer"
+                      >
+                        <Plus className="h-3 w-3" />
+                        <span>Nouveau Tiers</span>
+                      </button>
                     </div>
+                    
+                        
+                     {/* Quick Modal Add Tier Form */}
+              <AddPartnerModal
+              isOpen={isAddingTier}
+              onClose={() => setIsAddingTier(false)}
+              onSuccess = {handlePartnerSuccess}
+              ></AddPartnerModal>
+              
 
                     <div className="col-span-2 space-y-4">
   <div className="space-y-2">
@@ -170,7 +180,10 @@ export default function InvoiceMetaDataSection({ value, onChange, reference }: I
       }}
     >
       <SelectTrigger className="w-full h-10 bg-slate-50/50 border-slate-200">
-        <SelectValue placeholder="Sélectionner..." />
+        <SelectValue placeholder="Sélectionner..." >
+           {PaymentMethodsLabels[value.payment_method]}
+    
+       </SelectValue>
       </SelectTrigger>
 
       <SelectContent>

@@ -144,3 +144,162 @@ export const getItems = async () => {
     },
   ]
 }
+
+export const getProductCategories = async () => {
+  return [
+    {
+      id: "cat-1",
+      reference: "ELEC",
+      label: "Électricité",
+    },
+    {
+      id: "cat-2",
+      reference: "PLOMB",
+      label: "Plomberie",
+    },
+    {
+      id: "cat-3",
+      reference: "MAT",
+      label: "Matériaux de construction",
+    },
+    {
+      id: "cat-4",
+      reference: "PEINT",
+      label: "Peinture",
+    },
+    {
+      id: "cat-5",
+      reference: "QUINC",
+      label: "Quincaillerie",
+    },
+    {
+      id: "cat-6",
+      reference: "OUTIL",
+      label: "Outillage",
+    },
+    {
+      id: "cat-7",
+      reference: "HYD",
+      label: "Hydraulique",
+    },
+    {
+      id: "cat-8",
+      reference: "ASSAIN",
+      label: "Assainissement",
+    },
+    {
+      id: "cat-9",
+      reference: "BUREAU",
+      label: "Fournitures de bureau",
+    },
+    {
+      id: "cat-10",
+      reference: "INFO",
+      label: "Informatique",
+    },
+    {
+      id: "cat-11",
+      reference: "SECU",
+      label: "Sécurité",
+    },
+    {
+      id: "cat-12",
+      reference: "JARD",
+      label: "Jardinage",
+    },
+    {
+      id: "cat-13",
+      reference: "NETT",
+      label: "Produits de nettoyage",
+    },
+    {
+      id: "cat-14",
+      reference: "MOB",
+      label: "Mobilier",
+    },
+    {
+      id: "cat-15",
+      reference: "CONS",
+      label: "Consommables",
+    },
+  ]
+}
+export const generateInvoiceItems = async (target_amount: any) => {
+ return [
+  {
+    id: "1",
+    local_id: "tmp-1",
+    item: {
+      id: "p1",
+      reference: "CIM001",
+      label: "Ciment CPJ35",
+    },
+    unit: "BAG",
+    quantity: 20,
+    amount_type: "HT",
+    amount_ht: 1200,
+    amount_ttc: 1440,
+    vat_rate: 20,
+  },
+  {
+    id: "2",
+    local_id: "tmp-2",
+    item: {
+      id: "p2",
+      reference: "ELEC001",
+      label: "Câble électrique 2.5mm",
+    },
+    unit: "METER",
+    quantity: 100,
+    amount_type: "HT",
+    amount_ht: 500,
+    amount_ttc: 600,
+    vat_rate: 20,
+  },
+  {
+    id: "3",
+    local_id: "tmp-3",
+    item: {
+      id: "p3",
+      reference: "PEINT001",
+      label: "Peinture blanche",
+    },
+    unit: "BOX",
+    quantity: 5,
+    amount_type: "HT",
+    amount_ht: 750,
+    amount_ttc: 900,
+    vat_rate: 20,
+  },
+  {
+    id: "4",
+    local_id: "tmp-4",
+    item: {
+      id: "p4",
+      reference: "PLOMB001",
+      label: "Tuyau PVC",
+    },
+    unit: "METER",
+    quantity: 50,
+    amount_type: "HT",
+    amount_ht: 400,
+    amount_ttc: 480,
+    vat_rate: 20,
+  },
+  {
+    id: "5",
+    local_id: "tmp-5",
+    item: {
+      id: "p5",
+      reference: "SAB001",
+      label: "Sable fin",
+    },
+    unit: "TON",
+    quantity: 3,
+    amount_type: "HT",
+    amount_ht: 900,
+    amount_ttc: 1080,
+    vat_rate: 20,
+  },
+]
+}

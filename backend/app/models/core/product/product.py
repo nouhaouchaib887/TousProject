@@ -4,7 +4,7 @@ from decimal import Decimal
 from enum import Enum
 from uuid import UUID, uuid4
 import uuid
-
+from pydantic import computed_field
 from typing import Optional, List, TYPE_CHECKING
 
 
@@ -13,7 +13,7 @@ from sqlmodel import SQLModel, Field, Relationship
 if TYPE_CHECKING:
     from .product_category import ProductCategory
     from .product_unit import ProductUnit
-
+    from .product_purchase_price_history import  ProductPurchasePriceHistory
 
 class UnitType(str, Enum):
     UNIT = "U"          # unité / pièce
@@ -24,7 +24,7 @@ class UnitType(str, Enum):
 
 
 class ProductBase(SQLModel):
-    name: str = Field(index=True, max_length=255)
+    label: str = Field(index=True, max_length=255)
 
     reference: str = Field(
         index=True,
@@ -33,13 +33,10 @@ class ProductBase(SQLModel):
         description="Référence interne du produit"
     )
 
-    lable: Optional[str] = None
-
     unit: UnitType = Field(default=UnitType.UNIT)
 
-    purchase_price: Decimal = Field(default=0, ge=0)
-    selling_price: Decimal = Field(default=0, ge=0)
-
+    median_purchase_price: Optional[float] = Field(default=0, ge=0)
+    margin_rate: Decimal = Field(default=Decimal("20"))
     vat_rate: Decimal = Field(default=20, ge=0)
 
     min_stock_level: Decimal = Field(default=0, ge=0)
@@ -59,4 +56,14 @@ class Product(ProductBase, table=True):
     #Relations
     product_category : "ProductCategory" = Relationship(back_populates="products"
     )
-    units: List["ProductUnit"]
+    units: List["ProductUnit"]  = Relationship(back_populates="product")
+    purchase_prices: List["ProductPurchasePriceHistory"] = Relationship(back_populates="product")
+
+    @computed_field
+    @property
+    def recommended_selling_price(self) -> float:
+        return round(
+            self.median_purchase_price * (1 + self.margin_rate / 100),
+        2
+    )
+    

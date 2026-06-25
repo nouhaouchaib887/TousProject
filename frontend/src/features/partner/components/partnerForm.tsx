@@ -3,9 +3,11 @@
 import * as React from 'react'
 import { useState, useRef, useCallback } from 'react'
 import Webcam from "react-webcam"
+const WebcamComponent = Webcam as any;
 import { Camera, Upload, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {Checkbox} from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -14,11 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {Partner} from '../types'
 import { cn } from '@/lib/utils'
 import { addClient, uploadCin, updateClient, getQualities } from '@/features/Client/api/clientService'
 import { toast } from "sonner" 
 
-export function PartnerForm({ onPartnerCreate, partner }: { onPartnerCreate?: (partner: any) => void; partner?: any }) {
+export function PartnerForm({ onPartnerCreate, partner }: { onPartnerCreate?: (partner:Partner) => void; partner?: any }) {
    const [formData, setFormData] = useState({
       first_name: partner?.first_name || '',
       last_name: partner?.last_name || '',
@@ -26,10 +29,16 @@ export function PartnerForm({ onPartnerCreate, partner }: { onPartnerCreate?: (p
       company_name: partner?.company_name || '',
       ice: partner?.ice || '',
       rc: partner?.rc || '',
-      quality: {id:'', name:''},
       phone_number: partner?.phone_number || '',
       email: partner?.email || '',
-      address: partner?.address || ''
+      address: partner?.address || '',
+      city: partner?.city || '',
+      notes: partner?.notes || '',
+      credit_limit: partner?.credit_limit || 0,
+      is_supplier: partner?.is_supplier || false,
+      is_customer: partner?.is_customer || false,
+      is_active: partner?.is_active || true
+
     })
     const [cinFile, setCinFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false)
@@ -52,22 +61,7 @@ React.useEffect(() => {
   fetchQualities()
 }, [])
 
-const handleQualityBlur = () => {
-  const typedName = formData.quality?.name?.trim()
 
-  if (!typedName) return
-
-  const existingQuality = suggestedQualites.find(
-    (q: any) => q.name === typedName
-  )
-
-  setFormData({
-    ...formData,
-    quality: existingQuality
-      ? { id: existingQuality.id, name: existingQuality.name }
-      : { id: "", name: typedName },
-  })
-}
     const base64ToFile = (base64: string, filename: string) => {
       const arr = base64.split(',')
       const mime = arr[0].match(/:(.*?);/)![1]
@@ -112,7 +106,7 @@ const handleQualityBlur = () => {
 
     // 2️⃣ Payload client (JSON)
     const clientPayload = {
-      client_type: clientType, // ⚠️ doit matcher l'enum backend: PHYSICAL / MORAL
+   // ⚠️ doit matcher l'enum backend: PHYSICAL / MORAL
       first_name: sanitizeValue(formData.first_name),
       last_name: sanitizeValue(formData.last_name),
       cin: sanitizeValue(formData.cin),
@@ -122,7 +116,13 @@ const handleQualityBlur = () => {
       company_name: clientType === "Morale" ? sanitizeValue(formData.company_name) : null,
       ice: clientType === "Morale" ? sanitizeValue(formData.ice) : null,
       rc: clientType === "Morale" ? sanitizeValue(formData.rc) : null,
-      quality: formData.quality
+      legal_type: clientType,
+      city: sanitizeValue(formData.city),
+      credit_limit: Number(formData.credit_limit) || 0,
+      notes: sanitizeValue(formData.notes),
+      is_active: formData.is_active,
+      is_customer: formData.is_customer,
+      is_supplier: formData.is_supplier,
     };
     console.log("client payload:", clientPayload)
 
@@ -167,7 +167,13 @@ const handleQualityBlur = () => {
             phone_number: "",
             email: "",
             address: "",
-            quality:{id:"", name:""}
+            city:"",
+            credit_limit:0,
+            notes:'',
+            is_active: true,
+            is_customer: false,
+            is_supplier: false
+
           });
           setCinFile(null);
         }
@@ -184,229 +190,263 @@ const handleQualityBlur = () => {
     }
   }
     return (
-      <form onSubmit={handleSubmit} className="space-y-6 flex-1 overflow-y-auto px-4 py-2 custom-scrollbar  bg-white dark:bg-white text-slate-900 dark:text-slate-900">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit}  className="space-y-5 max-h-[80vh] overflow-y-auto px-1 py-1 text-slate-900">
+      <div className="border-t border-slate-100 pt-4 space-y-4">
+        <p className="text-[11px] font-bold text-[#1d2745] uppercase tracking-wider">Informations Générales</p>
+      {/* 1. Legal Type Selector */}
+      <div className="space-y-1.5">
+        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          Type de Tiers / Partenaire
+        </label>
+        <Select 
+          value={clientType} 
+          onValueChange={(val) => {
+            if (val === 'Physique' || val === 'Morale') {
+              setClientType(val);
+            }
+          }}
+        >
+          <SelectTrigger className="w-full h-11 bg-slate-50/50 border border-slate-200 text-slate-900 rounded-xl focus:ring-slate-900/20 px-3 flex justify-between items-center text-sm">
+            <SelectValue placeholder="Sélectionner..." />
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-slate-200 shadow-md rounded-lg">
+            <SelectItem value="Physique">Physique (Particulier)</SelectItem>
+            <SelectItem value="Morale">Morale (Entreprise)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* 2. Primary Fields (Physique vs Morale) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Prénom {clientType === 'Physique' && '*'}
+          </label>
+          <input 
+            type="text"
+            placeholder="Prénom" 
+            className="w-full h-11 px-3.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm" 
+            value={formData.first_name}
+            onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+            required={clientType === 'Physique'}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Nom {clientType === 'Physique' && '*'}
+          </label>
+          <input 
+            type="text"
+            placeholder="Nom" 
+            className="w-full h-11 px-3.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm" 
+            value={formData.last_name}
+            onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+            required={clientType === 'Physique'}
+          />
+        </div>
+
+        <div className="col-span-1 sm:col-span-2 space-y-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            CIN / Passeport
+          </label>
+          <input 
+            type="text"
+            placeholder="Ex: AB123456" 
+            className="w-full h-11 px-3.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 font-mono text-sm" 
+            value={formData.cin}
+            onChange={(e) => setFormData({...formData, cin: e.target.value})}
+          />
+        </div>
+      </div>
+
+      {/* Corporate Info Section if Morale */}
+      {clientType === 'Morale' && (
+        <div className="space-y-4 p-4 bg-slate-50 border border-slate-150 rounded-2xl animate-in fade-in slide-in-from-top-2">
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Prénom *</Label>
-            <Input 
-              placeholder="Prénom" 
-              className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20" 
-              value={formData.first_name}
-              onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 ml-1">Nom *</Label>
-            <Input 
-              placeholder="Nom" 
-              className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400  rounded-xl focus:ring-slate-900/20" 
-              value={formData.last_name}
-              onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-              required
-            />
-          </div>
-          <div className="col-span-1 sm:col-span-2 space-y-1.5">
-            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400  ml-1">CIN </Label>
-            <Input 
-              placeholder="Ex: AB123456" 
-              className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400  rounded-xl focus:ring-slate-900/20 font-mono" 
-              value={formData.cin}
-              onChange={(e) => setFormData({...formData, cin: e.target.value})}
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Nom de l&apos;Entreprise *
+            </label>
+            <input 
+              type="text"
+              placeholder="Ex: ElectroPro S.A.R.L" 
+              className="w-full h-11 px-3.5 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm" 
+              value={formData.company_name}
+              onChange={(e) => setFormData({...formData, company_name: e.target.value})}
+              required={clientType === 'Morale'}
             />
           </div>
 
-          <div className="col-span-1 space-y-1.5">
-            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Qualité</Label>
-            <Input
-  list="qualite-suggestions"
-  value={formData.quality?.name || ""}
-  onChange={(e) =>
-    setFormData({
-      ...formData,
-      quality: {
-        id: "",
-        name: e.target.value,
-      },
-    })
-  }
-  onBlur={handleQualityBlur}
-  placeholder="Ex: Propriétaire, Héritier..."
-  className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20"
-/>
-           <datalist id="qualite-suggestions">
-  {suggestedQualites.map((item: any) => (
-    <option key={item.id} value={item.name} />
-  ))}
-</datalist>
-          </div>
-
-          <div className="col-span-1 sm:col-span-2 space-y-2">
-            <div className="flex items-center justify-between mb-1">
-              <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Document d'identité (CIN/Passport) </Label>
-              <div className="flex bg-slate-100 dark:bg-slate-100 p-1 rounded-lg">
-                 <Button 
-                   type="button" 
-                   variant="ghost" 
-                   size="sm" 
-                   className={cn(
-                     "h-7 px-3 text-[10px] uppercase font-bold tracking-tight rounded-md transition-all",
-                     !showCamera ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-slate-900' : 'text-slate-400'
-                   )}
-                   onClick={() => setShowCamera(false)}
-                 >
-                   Fichier
-                 </Button>
-                 <Button 
-                   type="button" 
-                   variant="ghost" 
-                   size="sm" 
-                   className={cn(
-                     "h-7 px-3 text-[10px] uppercase font-bold tracking-tight rounded-md transition-all",
-                     showCamera ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-slate-900' : 'text-slate-400'
-                   )}
-                   onClick={() => setShowCamera(true)}
-                 >
-                   Scanner
-                 </Button>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                ICE 
+              </label>
+              <input 
+                type="text"
+                placeholder="Ex: 001234567890123" 
+                className="w-full h-11 px-3.5 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 font-mono text-sm" 
+                value={formData.ice}
+                onChange={(e) => setFormData({...formData, ice: e.target.value})}
+              />
             </div>
 
-            <div className="mt-1 flex flex-col gap-2">
-              {!showCamera ? (
-                <div className="relative group">
-                  <Input 
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg"
-                    className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-2 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400  rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-50/50 transition-all text-xs pr-10"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) setCinFile(file)
-                    }}
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-900 transition-colors">
-                    <Upload size={16} />
-                  </div>
-                </div>
-              ) : (
-                <div className="relative flex flex-col gap-2">
-                  <div className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 dark:border-slate-100 bg-black shadow-inner">
-                    <Webcam
-                      audio={false}
-                      ref={webcamRef}
-                      screenshotFormat="image/jpeg"
-                      screenshotQuality={0.92}
-                      videoConstraints={{ facingMode: "environment" }}
-                      className="w-full h-full object-cover"
-                      disablePictureInPicture={true}
-                      forceScreenshotSourceSize={false}
-                      imageSmoothing={true}
-                      mirrored={false}
-                      onUserMedia={() => {}}
-                      onUserMediaError={() => {}}
-                    />
-                    <div className="absolute inset-0 border-2 border-dashed border-white/20 m-6 rounded-xl pointer-events-none"></div>
-                  </div>
-                  <Button 
-                    type="button" 
-                    size="sm" 
-                    onClick={capturePhoto}
-                    className="w-full text-[10px] uppercase font-bold tracking-widest h-10 bg-[#0B1739] hover:bg-[#1E293B] text-white rounded-xl"
-                  >
-                    <Camera className="size-4 mr-2" />
-                    Capturer la photo
-                  </Button>
-                </div>
-              )}
-
-              {cinFile && (
-                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-500/10 border border-slate-100 dark:border-slate-100 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="text-slate-900 dark:text-slate-900" />
-                    <span className="text-xs text-slate-700 dark:text-slate-700 font-medium truncate max-w-[200px]">
-                      {cinFile.name.startsWith('scan_cin') ? "Capture prête" : cinFile.name}
-                    </span>
-                  </div>
-                  <button 
-                    type="button" 
-                    className="text-[10px] uppercase font-bold text-slate-400  dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-500 transition-colors"
-                    onClick={() => setCinFile(null)}
-                  >
-                    Supprimer
-                  </button>
-                </div>
-              )}
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                RC (Registre de Commerce)
+              </label>
+              <input 
+                type="text"
+                placeholder="Ex: RC Casablanca 12345" 
+                className="w-full h-11 px-3.5 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 font-mono text-sm" 
+                value={formData.rc}
+                onChange={(e) => setFormData({...formData, rc: e.target.value})}
+              />
             </div>
           </div>
+        </div>
+      )}
+      </div>
 
-          <div className="col-span-1 sm:col-span-2 space-y-1.5">
-            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Type de client</Label>
-            <Select value={clientType} onValueChange={(value) => value && setClientType(value)}>
-              <SelectTrigger className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 rounded-xl focus:ring-slate-900/20">
-                <SelectValue placeholder="Sélectionner..." />
-              </SelectTrigger>
-              <SelectContent >
-                <SelectItem value="Physique">Physique</SelectItem>
-                <SelectItem value="Morale" >Morale</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {clientType === 'Morale' && (
-            <>
-              <div className="col-span-1 sm:col-span-2 space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                 <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Nom de l&apos;Entreprise *</Label>
-                <Input 
-                  placeholder="Nom commercial" 
-                  className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20" 
-                  value={formData.company_name}
-                  onChange={(e) => setFormData({...formData, company_name: e.target.value})}
-                />
-              </div>
-              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">ICE </Label>
-                <Input 
-                  placeholder="15 chiffres" 
-                  className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20 font-mono" 
-                  value={formData.ice}
-                  onChange={(e) => setFormData({...formData, ice: e.target.value})}
-                />
-              </div>
-              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">RC </Label>
-                <Input 
-                  placeholder="Registre de Commerce" 
-                  className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20 font-mono" 
-                  value={formData.rc}
-                  onChange={(e) => setFormData({...formData, rc: e.target.value})}
-                />
-              </div>
-            </>
-          )}
-          
-          <div className="col-span-1 sm:col-span-2 space-y-1.5">
-            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Téléphone *</Label>
-            <Input 
-              placeholder="+212 6..." 
-              className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20" 
+     
+
+      {/* 4. Contact & Location Information */}
+      <div className="border-t border-slate-100 pt-4 space-y-4">
+        <p className="text-[11px] font-bold text-[#1d2745] uppercase tracking-wider">Coordonnées & Localisation</p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Téléphone portable *
+            </label>
+            <input 
+              type="text"
+              placeholder="Ex: +212 661-123456" 
+              className="w-full h-11 px-3.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm" 
               value={formData.phone_number}
               onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
               required
             />
           </div>
-          <div className="col-span-1 sm:col-span-2 space-y-1.5">
-            <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-400 ml-1">Email</Label>
-            <Input 
-              placeholder="contact@email.com" 
-              className="h-11 bg-slate-50/50 dark:bg-slate-50/50 border-slate-100 dark:border-slate-100 text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-xl focus:ring-slate-900/20" 
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Courriel (Email)
+            </label>
+            <input 
               type="email"
+              placeholder="Ex: contact@email.ma" 
+              className="w-full h-11 px-3.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm" 
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
             />
           </div>
-        </div>
 
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-100 mt-6 sticky bottom-0 bg-white dark:bg-white py-4">
+          <div className="col-span-1 sm:col-span-2 space-y-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Ville
+            </label>
+            <input 
+              type="text"
+              placeholder="Ex: Casablanca" 
+              className="w-full h-11 px-3.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm" 
+              value={formData.city}
+              onChange={(e) => setFormData({...formData, city: e.target.value})}
+            />
+          </div>
+
+          <div className="col-span-1 sm:col-span-2 space-y-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Adresse physique complète
+            </label>
+            <textarea 
+              placeholder="Rue, Quartier, Code postal, Ville..." 
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm resize-none" 
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Business Settings (Credit Limit, Roles, and Notes) */}
+      <div className="border-t border-slate-100 pt-4 space-y-4">
+        <p className="text-[11px] font-bold text-[#1d2745] uppercase tracking-wider">Paramètres de Gestion & Crédit</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Limite de Crédit (Maximum)
+            </label>
+            <input 
+              type="number"
+              placeholder="0 (Pas de limite)" 
+              className="w-full h-11 px-3.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm" 
+              value={formData.credit_limit}
+              onChange={(e) => setFormData({...formData, credit_limit: Number(e.target.value)})}
+            />
+          </div>
+
+          <div className="space-y-1.5 flex flex-col justify-end">
+            <div className="flex items-center gap-2 h-11 px-1">
+      
+               <Checkbox 
+                    id="is_active" 
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({...formData,is_active: !!checked})}
+                    className="h-5 w-5 rounded-lg border-slate-200 transition-all focus-visible:ring-emerald-500 data-checked:bg-emerald-500 data-checked:border-emerald-500 data-checked:text-white"
+                    />
+                 <Label htmlFor="is_active" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">Activer</Label>
+      
+            </div>
+          </div>
+
+          <div className="col-span-1 sm:col-span-2 grid grid-cols-2 gap-4  p-3 rounded-xl">
+            <div className="flex items-center gap-2.5">
+            <input
+              type="checkbox"
+              id="is_purchasable"
+              className="h-4.5 w-4.5 rounded accent-brand-500 focus:ring-2 focus:ring-brand-200 cursor-pointer"
+              checked={formData.is_customer}
+              onChange={(e) => setFormData({...formData, is_customer: e.target.checked})}
+            />
+            <label htmlFor="is_purchasable" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+              Client
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <input
+              type="checkbox"
+              id="is_sellable"
+              className="h-4.5 w-4.5 rounded accent-brand-500 focus:ring-2 focus:ring-brand-200 cursor-pointer"
+              checked={formData.is_supplier}
+              onChange={(e) => setFormData({...formData, is_supplier: e.target.checked})}
+            />
+            <label htmlFor="is_sellable" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+              Fournisseur
+            </label>
+          </div>
+          </div>
+
+          <div className="col-span-1 sm:col-span-2 space-y-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Notes internes / Observations
+            </label>
+            <textarea 
+              placeholder="Remarques complémentaires..." 
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20 text-sm resize-none" 
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="pt-4 border-t border-slate-100 dark:border-slate-100 mt-6 sticky bottom-0 bg-white dark:bg-white py-4">
           <Button type="submit" className="w-full h-12 bg-[#0B1739] hover:bg-[#1E293B] text-white font-bold uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-slate-900/20 transition-all" disabled={loading}>
             {loading ? (
               <>
@@ -414,10 +454,11 @@ const handleQualityBlur = () => {
                 Traitement en cours...
               </>
             ) : (
-               partner ? 'Enregistrer les modifications' : 'Créer la fiche client'
+               partner ? 'Enregistrer les modifications' : 'Créer la fiche tiers'
             )}
           </Button>
         </div>
-      </form>
+    </form>
+        
     )
 }

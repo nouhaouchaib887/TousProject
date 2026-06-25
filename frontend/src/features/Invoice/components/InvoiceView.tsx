@@ -157,7 +157,7 @@ const handleDuplicateProject = (invoice: any) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Type de mission</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Type de la Facture</label>
               <Select value={typeFilter} onValueChange={(value) => value !== null && setTypeFilter(value)}>
                 <SelectTrigger className="w-full bg-slate-50/50 border-slate-100 rounded-xl focus:ring-brand-500/20">
                   <SelectValue placeholder="Tous les types" />
@@ -170,7 +170,7 @@ const handleDuplicateProject = (invoice: any) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Du</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date d'Emission</label>
               <Input 
                 type="date" 
                 value={invoiceDate} 
@@ -180,7 +180,7 @@ const handleDuplicateProject = (invoice: any) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Au </label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date d'Echéance </label>
               <Input 
                 type="date" 
                 value={dueDate} 
@@ -195,7 +195,7 @@ const handleDuplicateProject = (invoice: any) => {
         <InvoiceTable invoices={filteredInvoices as unknown as InvoiceTableRead[]} 
          onEdit={handleEditInvoice} onDelete={handleDeleteProject}
           onDuplicate={handleDuplicateProject}
-          onEditClient={handleEditClient}/>
+          onEditPartner={handleEditClient}/>
 
         {/* Add Invoice Modal */}
         <AddInvoiceForm

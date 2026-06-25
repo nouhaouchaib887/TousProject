@@ -186,9 +186,8 @@ export const ProduitsView: React.FC = () => {
         </div>
         <Button
           id="btn-add-product"
-          variant="primary"
           onClick={handleOpenAdd}
-          icon={<PlusCircle className="h-4 w-4" />}
+         
         >
           Nouveau Produit
         </Button>
@@ -610,7 +609,7 @@ export const ProduitsView: React.FC = () => {
               <Button variant="secondary" type="button" onClick={() => setIsEditOpen(false)}>
                 Annuler
               </Button>
-              <Button variant="primary" type="submit">
+              <Button  type="submit">
                 Enregistrer modifications
               </Button>
             </div>

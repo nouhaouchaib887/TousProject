@@ -10,6 +10,7 @@ interface ModalProps {
   title?: string
   description?: string
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl"
+  maxSizeClass ?: string;
 }
 
 export function Modal({ 
@@ -18,7 +19,9 @@ export function Modal({
   children, 
   title, 
   description,
-  maxWidth = "lg"
+  maxWidth = "lg",
+  maxSizeClass = 'max-w-lg',
+  
 }: ModalProps) {
   // Close on escape key
   React.useEffect(() => {
@@ -59,10 +62,10 @@ export function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={cn(
-              "relative w-full bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden",
-              maxWidthClasses[maxWidth]
-            )}
+            className=
+              {`relative w-full ${maxSizeClass}  bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden`}
+             
+            
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 p-6">

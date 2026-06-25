@@ -3,6 +3,7 @@ export interface Product{
     id?: string
     label?:string
     reference?:string
+    
 }
 
 
@@ -33,20 +34,24 @@ export interface Partner{
     id?:string
     last_name?:string
     first_name?:string
+    full_name?:string
     phone_number?:string
+    cin?:string
 }
 export interface InvoiceTableRead {
     id?:string;
-    invoice_type?:string
+    invoice_type:string
     due_date:string;
     invoice_date:string
     partner?:Partner
     reference?:string;
+    total_paid?:number;
+    balance?:number;
     amount_type:string;
     amount_ttc?:number
     amount_ht?:number
     total_vat?:number
-    payment_method?:string
+    payment_method:string
     payment_reference?:string
     expected_check_date?:string 
     status?:string
@@ -61,8 +66,8 @@ export interface InvoiceMetaData {
     due_date:string;
     invoice_date:string
     partner?:Partner
-    invoice_type?:string;
-    payment_method?:string
+    invoice_type:string;
+    payment_method:string
     expected_check_number?: string
     expected_check_date?: string
 }
